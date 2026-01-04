@@ -7,6 +7,7 @@ local Synchronizer = loadstring(game:HttpGet("https://github.com/LuauExploiter/S
 local Rarities = loadstring(game:HttpGet("https://github.com/LuauExploiter/SAB-Requires/Rarities.lua"))()
 local NumberUtils = loadstring(game:HttpGet("https://github.com/LuauExploiter/SAB-Requires/NumberUtils.lua"))()
 local Animals = loadstring(game:HttpGet("https://github.com/LuauExploiter/SAB-Requires/Animals.lua"))()
-local AnimalsShared = loadstring(game:HttpGet("https://github.com/LuauExploiter/SAB-Requires/AnimalsShared.lua"))()```
+local AnimalsShared = loadstring(game:HttpGet("https://github.com/LuauExploiter/SAB-Requires/AnimalsShared.lua"))()
+```
 
 Then from there you could just use the functions/purpose it serves inside your script. 
