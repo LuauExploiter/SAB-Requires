@@ -1,6 +1,6 @@
 # Steal a Brainrot Require Alternative
 
-The only point of this is for SAB scripts to loadstring these instead of directly calling require() on the ones ingame because it makes your script detected.
+The only point of this is for Steal a Brainrot scripts to loadstring these instead of using require() on the ones ingame because it makes your script detected.
 To use this, just do something like:
 ```lua
 local Synchronizer = loadstring(game:HttpGet("https://raw.githubusercontent.com/LuauExploiter/SAB-Requires/main/Synchronizer.lua"))()
