@@ -2,7 +2,7 @@
 
 The only point of this is for SAB scripts to loadstring these instead of directly calling require() on the ones ingame because it makes your script detected.
 Example:
-lua```
+```lua
 local Synchronizer = loadstring(game:HttpGet("https://github.com/LuauExploiter/SAB-Requires/Synchronizer.lua"))()
 local Rarities = loadstring(game:HttpGet("https://github.com/LuauExploiter/SAB-Requires/Rarities.lua"))()
 local NumberUtils = loadstring(game:HttpGet("https://github.com/LuauExploiter/SAB-Requires/NumberUtils.lua"))()
