@@ -16,8 +16,96 @@ else
     CommunicationRoute = script:WaitForChild("CommunicationRoute")
 end
 
-local ChannelModule = script:FindFirstChild("Channel") or script:WaitForChild("Channel")
-local SignalModule = script.Parent:FindFirstChild("Signal") or script.Parent:WaitForChild("Signal")
+local ChannelModule = script:FindFirstChild("Channel")
+if not ChannelModule then
+    ChannelModule = Instance.new("ModuleScript")
+    ChannelModule.Name = "Channel"
+    ChannelModule.Source = [[
+        local Channel = {}
+        Channel.__index = Channel
+        
+        function Channel.new(index, data, synchronizer)
+            local self = setmetatable({}, Channel)
+            self._index = index
+            self._data = data or {}
+            self._synchronizer = synchronizer
+            self._listeners = {}
+            return self
+        end
+        
+        function Channel:GetIndex()
+            return self._index
+        end
+        
+        function Channel:Get(key)
+            return self._data[key]
+        end
+        
+        function Channel:Set(key, value)
+            self._data[key] = value
+            return self
+        end
+        
+        function Channel:GetTable()
+            return self._data
+        end
+        
+        function Channel:Destroy()
+            self._data = nil
+            self._listeners = nil
+            self._synchronizer = nil
+        end
+        
+        return Channel
+    ]]
+    ChannelModule.Parent = script
+end
+
+local SignalModule = script.Parent:FindFirstChild("Signal")
+if not SignalModule then
+    SignalModule = Instance.new("ModuleScript")
+    SignalModule.Name = "Signal"
+    SignalModule.Source = [[
+        local Signal = {}
+        Signal.__index = Signal
+        
+        function Signal.new()
+            local self = setmetatable({}, Signal)
+            self._connections = {}
+            return self
+        end
+        
+        function Signal:Connect(callback)
+            local connection = {
+                Connected = true,
+                Disconnect = function(self)
+                    self.Connected = false
+                    for i, conn in ipairs(self._parent._connections) do
+                        if conn == self then
+                            table.remove(self._parent._connections, i)
+                            break
+                        end
+                    end
+                end
+            }
+            connection._parent = self
+            connection._callback = callback
+            table.insert(self._connections, connection)
+            return connection
+        end
+        
+        function Signal:Fire(...)
+            for _, connection in ipairs(self._connections) do
+                if connection.Connected then
+                    task.spawn(connection._callback, ...)
+                end
+            end
+        end
+        
+        return Signal
+    ]]
+    SignalModule.Parent = script.Parent
+end
 
 local Channel = require(ChannelModule)
 local Signal = require(SignalModule)
@@ -29,34 +117,6 @@ local Events = {
     OnChannelListenerAdded = Signal.new(),
     OnChannelListenerRemoved = Signal.new()
 }
-
-local HasRelateRun = false
-
-local function RelateChannels()
-    if not IsServer and not HasRelateRun then
-        local callerInfo
-        local success, result = pcall(function()
-            local info = debug.info(4, "s")
-            return info
-        end)
-        
-        if success then
-            callerInfo = result
-        else
-            callerInfo = "[C]"
-        end
-        
-        if callerInfo == "[C]" or not callerInfo or not string.find(callerInfo, ".", 1, true) then
-            HasRelateRun = true
-            local delayTime = game.PlaceId == 120148879522453 and 1 or math.random(6, 15)
-            task.delay(delayTime, function()
-                local netFolder = game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Net")
-                local sortRemote = netFolder:WaitForChild("RE/InventoryService/Sort")
-                sortRemote:FireServer("Default" .. string.char(239, 187, 191), 1)
-            end)
-        end
-    end
-end
 
 local Synchronizer = {}
 
@@ -80,7 +140,7 @@ Synchronizer.Destroy = function(index)
     local channel = Channels[index]
     if channel then
         Events.OnChannelDestroyed:Fire(channel)
-        channel:Destroy(true)
+        channel:Destroy()
         Channels[index] = nil
     end
     
@@ -89,8 +149,6 @@ end
 
 Synchronizer.Get = function(index)
     assert(index, "Invalid Channel Index")
-    
-    RelateChannels()
     return Channels[index]
 end
 
@@ -110,7 +168,6 @@ end
 Synchronizer.Wait = function(index)
     assert(index, "Invalid Channel Index")
     
-    RelateChannels()
     local channel = Channels[index]
     if channel then
         return channel
@@ -193,8 +250,6 @@ else
             end
         end
     end)
-    
-    CommunicationRoute:FireServer()
 end
 
 return Synchronizer
